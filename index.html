@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Game Intel Hub - Strategic News Platform</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* -------------------------------------------------- */
+        /* 1. Global & Variables */
+        /* -------------------------------------------------- */
+        :root {
+            --bg-body: #f3f4f6;
+            --bg-sidebar: #1f2937;
+            --bg-card: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --color-accent: #3b82f6;
+
+            /* Game Colors */
+            --brand-fgo: #2563eb;
+            --brand-zzz: #d97706;
+            --brand-pso2: #059669;
+
+            /* Type Colors */
+            --type-game: #eff6ff;
+            --type-game-text: #1d4ed8;
+            --type-real: #fdf2f8;
+            --type-real-text: #db2777;
+
+            --sidebar-width: 260px;
+            --header-height-mobile: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            /* スマホでのタップ強調色を消す */
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        /* -------------------------------------------------- */
+        /* 2. Mobile Header (スマホ用ヘッダー) */
+        /* -------------------------------------------------- */
+        .mobile-header {
+            display: none;
+            /* PCでは非表示 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height-mobile);
+            background-color: var(--bg-sidebar);
+            color: #fff;
+            z-index: 1000;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .mobile-menu-btn {
+            background: transparent;
+            color: #fff;
+            font-size: 1.5rem;
+            padding: 10px;
+        }
+
+        .mobile-logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* -------------------------------------------------- */
+        /* 3. Sidebar Navigation */
+        /* -------------------------------------------------- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-sidebar);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            position: fixed;
+            height: 100vh;
+            z-index: 1001;
+            /* モバイルヘッダーより上 */
+            transition: transform 0.3s ease;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            /* タップしやすいように少し拡大 */
+            border-radius: 12px;
+            color: #9ca3af;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .nav-link.active {
+            background-color: var(--color-accent);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        /* オーバーレイ（スマホメニュー展開時の背景） */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(2px);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* -------------------------------------------------- */
+        /* 4. Main Content */
+        /* -------------------------------------------------- */
+        .main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Refresh Button */
+        .refresh-btn {
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .refresh-btn:hover:not(:disabled) {
+            background-color: #f9fafb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            /* フィルタが多い場合はスクロール */
+            padding-bottom: 5px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            /* 折り返し防止 */
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn.active {
+            background: var(--text-primary);
+            color: #fff;
+            border-color: var(--text-primary);
+        }
+
+        /* -------------------------------------------------- */
+        /* 5. Grid & Cards */
+        /* -------------------------------------------------- */
+        .grid {
+            display: grid;
+            /* スマホ(320px程度)でも崩れないように最小幅を調整 */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .card-link {
+            display: block;
+            transition: transform 0.2s;
+        }
+
+        .card-link:hover {
+            transform: translateY(-4px);
+        }
+
+        .card-link:active {
+            transform: scale(0.98);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #e5e7eb;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+            opacity: 0;
+            animation: fadeInImg 0.5s forwards;
+        }
+
+        @keyframes fadeInImg {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card-link:hover .card-img {
+            transform: scale(1.05);
+        }
+
+        /* Badges */
+        .game-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #fff;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .bg-FGO {
+            background: var(--brand-fgo);
+        }
+
+        .bg-ZZZ {
+            background: var(--brand-zzz);
+        }
+
+        .bg-PSO2 {
+            background: var(--brand-pso2);
+        }
+
+        .type-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+
+        .type-ingame {
+            color: var(--type-game-text);
+        }
+
+        .type-real {
+            color: var(--type-real-text);
+        }
+
+        .card-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .card-snippet {
+            font-size: 0.9rem;
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            margin-top: auto;
+            border-top: 1px solid #f3f4f6;
+            padding-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* -------------------------------------------------- */
+        /* 6. Detail Page */
+        /* -------------------------------------------------- */
+        .detail-container {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 900px;
+            margin: 0 auto;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .detail-hero {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background-color: #333;
+        }
+
+        .detail-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 40px;
+            color: #fff;
+        }
+
+        .detail-content {
+            padding: 40px;
+        }
+
+        .detail-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .quote-box {
+            background-color: #f8fafc;
+            border-left: 5px solid var(--color-accent);
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .source-btn-large {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            background: var(--text-primary);
+            color: #fff;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+
+        .source-btn-large:hover {
+            background: #000;
+        }
+
+        /* -------------------------------------------------- */
+        /* 7. Responsive (Multi-Platform Logic) */
+        /* -------------------------------------------------- */
+        @media (max-width: 900px) {
+            .main {
+                padding: 30px;
+            }
+
+            .sidebar {
+                width: 220px;
+            }
+
+            /* 少し細くする */
+            .main {
+                margin-left: 220px;
+            }
+        }
+
+        /* Mobile / Tablet Portrait */
+        @media (max-width: 768px) {
+
+            /* ヘッダー表示 */
+            .mobile-header {
+                display: flex;
+            }
+
+            /* サイドバー：ドロワー化 */
+            .sidebar {
+                transform: translateX(-100%);
+                /* 画面外へ隠す */
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+                width: 280px;
+                /* スマホでは少し幅広に */
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .brand {
+                margin-top: 20px;
+            }
+
+            /* ヘッダー分少し下げる必要はないが余白調整 */
+
+            /* メインコンテンツ */
+            .main {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: calc(var(--header-height-mobile) + 20px);
+                /* ヘッダーの高さ分下げる */
+            }
+
+            /* グリッドを1カラムにする（見やすさ優先） */
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .refresh-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 詳細ページ */
+            .detail-hero {
+                height: 250px;
+            }
+
+            .detail-hero-overlay {
+                padding: 20px;
+            }
+
+            .detail-title {
+                font-size: 1.5rem;
+            }
+
+            .detail-content {
+                padding: 20px;
+            }
+
+            .quote-box {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="mobile-header">
+        <button class="mobile-menu-btn" id="menu-toggle" aria-label="メニューを開く">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="mobile-logo">
+            <i class="fa-solid fa-gamepad"></i> Game Intel
+        </div>
+        <div style="width: 40px;"></div>
+    </header>
+
+    <div class="overlay" id="overlay"></div>
+
+    <nav class="sidebar" id="sidebar">
+        <a href="#" class="brand">
+            <i class="fa-solid fa-gamepad"></i> Game Intel
+        </a>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-all">
+                    <i class="fa-solid fa-layer-group"></i> 総合トップ
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#category/FGO" class="nav-link" id="nav-FGO">
+                    <i class="fa-solid fa-khanda"></i> FGO
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#category/ZZZ" class="nav-link" id="nav-ZZZ">
+                    <i class="fa-solid fa-bolt"></i> ZZZ
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#category/PSO2" class="nav-link" id="nav-PSO2">
+                    <i class="fa-solid fa-rocket"></i> PSO2 NGS
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="main" id="main-container">
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. UI CONTROL (Mobile Menu)
+        // ==========================================
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        function toggleMenu() {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMenu() {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        menuToggle.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', closeMenu);
+
+        // リンクをクリックしたらメニューを閉じる
+        navLinks.forEach(link => {
+            link.addEventListener('click', closeMenu);
+        });
+
+        // ==========================================
+        // 2. DATA & LOGIC (Original + Enhancements)
+        // ==========================================
+        const FALLBACK_IMAGE = "https://via.placeholder.com/800x450/cccccc/666666?text=No+Image";
+
+        const state = {
+            currentCategory: 'all',
+            currentType: 'all',
+            articles: [
+                {
+                    id: 101, game: "FGO", type: "INGAME",
+                    title: "【重要】全サーヴァントPU召喚、年末最終日程",
+                    date: "2025-12-10",
+                    source: "公式サイト", sourceUrl: "https://news.fate-go.jp",
+                    image: "https://via.placeholder.com/800x450/2563eb/ffffff?text=FGO+Gacha+Schedule",
+                    snippet: "年末のピックアップスケジュールが公開。12/29-31は「キャストリア」「オベロン」等の高難易度必須級サーヴァントが集中。",
+                    fullText: "公式サイトのお知らせより引用します。\n『Fate/Grand Order』では、年末特別企画「全サーヴァント日替わりピックアップ」の最終スケジュールを決定いたしました。\n特に注目すべきは12月29日からの3日間で、現在の環境において必須とされるサポーターが日替わりで登場します。"
+                },
+                {
+                    id: 102, game: "ZZZ", type: "INGAME",
+                    title: "Ver.2.4 新コンテンツ「深層ネットワーク」PV公開",
+                    date: "2025-12-05",
+                    source: "YouTube (公式)", sourceUrl: "https://youtube.com",
+                    image: "https://via.placeholder.com/800x450/d97706/ffffff?text=ZZZ+Ver2.4+Trailer",
+                    snippet: "新PVにて、ローグライクモード「深層ネットワーク」のゲームプレイ映像が初公開。装備持ち込み不可の完全実力主義。",
+                    fullText: "公式YouTubeチャンネルで公開されたVer.2.4予告番組より引用します。\n新モード「深層ネットワーク」は、プレイヤーが所有する装備（ドライバディスク）の効果が無効化され、ダンジョン内で入手する「レゾニア」のみでビルドを構築するローグライクコンテンツです。"
+                },
+                {
+                    id: 105, game: "FGO", type: "REAL",
+                    title: "『FGO Fes. 2026』東京ドーム開催決定！グッズ情報",
+                    date: "2025-12-12",
+                    source: "公式Twitter (X)", sourceUrl: "https://twitter.com/fgoproject",
+                    image: "https://via.placeholder.com/800x450/1e3a8a/ffffff?text=FGO+Fes+2026",
+                    snippet: "10周年を記念したリアルイベントの開催地が東京ドームに決定。事前通販限定のアクリルスタンド全300種の情報が解禁。",
+                    fullText: "公式X（旧Twitter）アカウントの速報より引用します。\n【特報】『Fate/Grand Order Fes. 2026 in 東京ドーム』の開催が決定しました！\n史上最大規模となる今回は、アリーナ席での「リアル召喚体験」など新企画が満載。"
+                },
+                {
+                    id: 106, game: "ZZZ", type: "REAL",
+                    title: "「ゼンレス」×「渋谷PARCO」コラボカフェ開催",
+                    date: "2025-11-28",
+                    source: "AniAni News", sourceUrl: "https://example.com/aniani",
+                    image: "https://via.placeholder.com/800x450/b45309/ffffff?text=ZZZ+Cafe+Collab",
+                    snippet: "渋谷PARCOにて期間限定コラボカフェがオープン。「ボンブ」を模したハンバーガーや、各陣営をイメージしたドリンクが登場。",
+                    fullText: "アニメ・ゲームニュースサイト『AniAni』の記事より引用します。\n『ゼンレスゾーンゼロ』の世界観を再現したコラボカフェが、12月20日より渋谷PARCOにて開催されます。\n注目メニューは「ボンプの充電満タンバーガー」。"
+                },
+                {
+                    id: 103, game: "PSO2", type: "REAL",
+                    title: "オーケストラコンサート「Sympathy 2026」開催",
+                    date: "2025-11-20",
+                    source: "ロボアークス", sourceUrl: "https://roboarks.jp",
+                    image: "https://via.placeholder.com/800x450/059669/ffffff?text=PSO2+Sympathy+2026",
+                    snippet: "ファン待望のオーケストラコンサートが3年ぶりに開催。ゲーム内アイテムコード特典として「演奏ロビアク」が付属。",
+                    fullText: "『ロボアークス』ブログの情報まとめより引用します。\n『PSO2』シリーズの楽曲をフルオーケストラで演奏する「Sympathy 2026」の開催が発表されました。\n今回の特典アイテムコードには、待望の「楽器演奏：バイオリン」ロビーアクションが含まれており、チケットの争奪戦が予想されます。"
+                }
+            ]
+        };
+
+        function handleRouting() {
+            const hash = window.location.hash.slice(1);
+            const [route, param] = hash.split('/');
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.toggle('active', link.getAttribute('href') === (hash ? `#${hash}` : '#'));
+            });
+
+            if (route === 'article' && param) {
+                renderDetail(parseInt(param));
+            } else if (route === 'category' && param) {
+                state.currentCategory = param;
+                renderList();
+            } else {
+                state.currentCategory = 'all';
+                renderList();
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function setTypeFilter(type) {
+            state.currentType = type;
+            renderList();
+        }
+
+        function fetchLatestData(btn) {
+            const icon = btn.querySelector('i');
+            btn.disabled = true;
+            icon.classList.add('spin');
+            icon.classList.remove('fa-sync-alt');
+            icon.classList.add('fa-spinner');
+
+            setTimeout(() => {
+                const newArticle = {
+                    id: Date.now(),
+                    game: "FGO", type: "INGAME",
+                    title: "【速報】新イベント「雪原の聖杯戦争」開催決定",
+                    date: new Date().toISOString().slice(0, 10),
+                    source: "公式Twitter", sourceUrl: "#",
+                    image: "https://via.placeholder.com/800x450/ff0000/ffffff?text=New+Event+Alert",
+                    snippet: "先ほど公式生放送で発表された新イベント情報。参加条件は「冬木クリア」のみ。配布サーヴァントは「星4 ランサー」確定。",
+                    fullText: "公式Twitterからの速報です。\n完全新規ストーリーイベント「雪原の聖杯戦争」が明日18:00より開催されます。\n今回のイベントは初心者応援キャンペーンを兼ねており、メインクエスト第1部序章をクリアするだけで参加可能です。"
+                };
+
+                state.articles.unshift(newArticle);
+                renderList();
+
+                btn.disabled = false;
+                icon.classList.remove('spin');
+                icon.classList.remove('fa-spinner');
+                icon.classList.add('fa-sync-alt');
+
+                alert("最新情報を取得しました！");
+            }, 1500);
+        }
+
+        function handleImageError(img) {
+            img.onerror = null;
+            img.src = FALLBACK_IMAGE;
+            img.alt = "Image not found";
+            img.parentElement.style.backgroundColor = "#eee";
+        }
+
+        const container = document.getElementById('main-container');
+
+        function renderList() {
+            let data = state.articles;
+            if (state.currentCategory !== 'all') data = data.filter(d => d.game === state.currentCategory);
+            if (state.currentType !== 'all') data = data.filter(d => d.type === state.currentType);
+
+            data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            const catLabel = state.currentCategory === 'all' ? '総合トップ' : state.currentCategory;
+
+            let html = `
+                <div class="header">
+                    <div class="header-top">
+                        <h1 class="page-title">${catLabel} 最新情報</h1>
+                        <button class="refresh-btn" onclick="fetchLatestData(this)">
+                            <i class="fa-solid fa-sync-alt"></i> 最新情報を取得
+                        </button>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <button class="filter-btn ${state.currentType === 'all' ? 'active' : ''}" onclick="setTypeFilter('all')">
+                            すべて
+                        </button>
+                        <button class="filter-btn ${state.currentType === 'INGAME' ? 'active' : ''}" onclick="setTypeFilter('INGAME')">
+                            <i class="fa-solid fa-gamepad"></i> ゲーム内情報
+                        </button>
+                        <button class="filter-btn ${state.currentType === 'REAL' ? 'active' : ''}" onclick="setTypeFilter('REAL')">
+                            <i class="fa-solid fa-ticket"></i> リアル・グッズ
+                        </button>
+                    </div>
+                </div>
+                <div class="grid">
+            `;
+
+            if (data.length === 0) {
+                html += `<p style="grid-column:1/-1; color:#6b7280; text-align:center; padding:20px;">条件に一致する情報は見つかりませんでした。</p>`;
+            } else {
+                html += data.map(item => {
+                    const typeLabel = item.type === 'INGAME' ? 'GAME INFO' : 'REAL EVENT';
+                    const typeClass = item.type === 'INGAME' ? 'type-ingame' : 'type-real';
+                    const typeIcon = item.type === 'INGAME' ? '<i class="fa-solid fa-gamepad"></i>' : '<i class="fa-solid fa-bag-shopping"></i>';
+
+                    return `
+                    <a href="#article/${item.id}" class="card-link">
+                        <article class="card">
+                            <div class="card-img-wrapper">
+                                <span class="game-badge bg-${item.game}">${item.game}</span>
+                                <span class="type-badge ${typeClass}">${typeIcon} ${typeLabel}</span>
+                                <img src="${item.image}" alt="${item.title}" class="card-img" onerror="handleImageError(this)">
+                            </div>
+                            <div class="card-body">
+                                <div class="card-meta">
+                                    <span><i class="fa-regular fa-clock"></i> ${item.date}</span>
+                                    <span>${item.source}</span>
+                                </div>
+                                <h2 class="card-title">${item.title}</h2>
+                                <p class="card-snippet">${item.snippet}</p>
+                                <div class="card-footer ${typeClass}">
+                                    詳細を見る <i class="fa-solid fa-arrow-right"></i>
+                                </div>
+                            </div>
+                        </article>
+                    </a>
+                `}).join('');
+            }
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function renderDetail(id) {
+            const item = state.articles.find(a => a.id === id);
+            if (!item) {
+                container.innerHTML = `<p>記事が見つかりません。<a href="#" onclick="history.back()">戻る</a></p>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="detail-container">
+                    <div class="detail-hero">
+                        <img src="${item.image}" alt="${item.title}" class="detail-hero-img" onerror="handleImageError(this)">
+                        <div class="detail-hero-overlay">
+                            <span class="game-badge bg-${item.game}" style="font-size:1rem; margin-bottom:10px; display:inline-block;">${item.game}</span>
+                            <h1 class="detail-title">${item.title}</h1>
+                            <div style="display:flex; gap:15px; align-items:center; color:rgba(255,255,255,0.9);">
+                                <span><i class="fa-regular fa-calendar"></i> ${item.date}</span>
+                                <span>|</span>
+                                <span><i class="fa-solid fa-link"></i> ${item.source}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-content">
+                        <a href="#" onclick="history.back(); return false;" style="display:inline-flex; align-items:center; gap:8px; margin-bottom:20px; color:#6b7280; font-weight:600;">
+                            <i class="fa-solid fa-arrow-left"></i> 一覧に戻る
+                        </a>
+
+                        <div class="quote-box">
+                            <p style="font-size:1.1rem; line-height:1.8; color:#334155; white-space:pre-wrap;">${item.fullText.replace(/\n/g, '<br>')}</p>
+                        </div>
+
+                        <p style="margin-bottom:20px; color:#64748b;">
+                            この情報は<strong>${item.source}</strong>により発信された内容に基づいています。
+                        </p>
+
+                        <a href="${item.sourceUrl}" target="_blank" class="source-btn-large">
+                            ${item.source}で詳細を確認する <i class="fa-solid fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.addEventListener('hashchange', handleRouting);
+        window.addEventListener('DOMContentLoaded', handleRouting);
+    </script>
+</body>
+
+</html>
